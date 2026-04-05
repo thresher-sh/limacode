@@ -20,7 +20,7 @@ Your `$PWD` is mounted at `~/workspace/current` inside the VM. When the session 
 ## Install
 
 ```bash
-curl -fsSL https://limacode.dev/install | sh
+curl -fsSL https://code.thresher.sh/install | sh
 ```
 
 The installer checks prerequisites (Lima, jq), offers to install them, verifies SHA-256 checksums, and lets you choose whether to download the pre-built image now, later, or build it locally.
