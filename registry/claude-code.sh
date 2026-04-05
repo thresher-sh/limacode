@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 AGENT_NAME="claude-code"
 AGENT_DESCRIPTION="Anthropic's Claude Code terminal agent"
 AGENT_DEPS=""

@@ -19,6 +19,14 @@ source "${LIMACODE_ROOT}/lib/image.sh"
 log()   { printf '%s\n' "$*" >&2; }
 error() { printf 'ERROR: %s\n' "$*" >&2; }
 
+# --- Cleanup ---
+_cleanup_instance=""
+_cleanup_yaml=""
+_run_cleanup() {
+    [[ -n "$_cleanup_instance" ]] && vm_cleanup "$_cleanup_instance"
+    [[ -n "$_cleanup_yaml" ]] && rm -f "$_cleanup_yaml"
+}
+
 # --- Argument parsing ---
 _parse_global_opts() {
     LIMACODE_AGENT=""
@@ -73,7 +81,9 @@ cmd_run() {
     local instance_name
     instance_name="$(vm_instance_name "$LIMACODE_AGENT" "$project_dir")"
 
-    trap "vm_cleanup '$instance_name'; rm -f '$yaml_file'" EXIT INT TERM
+    _cleanup_instance="$instance_name"
+    _cleanup_yaml="$yaml_file"
+    trap '_run_cleanup' EXIT INT TERM
 
     vm_create "$instance_name" "$yaml_file" || exit 1
     rm -f "$yaml_file"

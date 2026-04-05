@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 AGENT_NAME="pi"
 AGENT_DESCRIPTION="Minimal, extensible terminal coding agent by Mario Zechner"
 AGENT_DEPS=""

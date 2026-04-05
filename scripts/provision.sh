@@ -45,6 +45,7 @@ if ! command -v go &>/dev/null; then
         *)       GO_ARCH="$ARCH" ;;
     esac
     curl -fsSL "https://go.dev/dl/${GO_VERSION}.linux-${GO_ARCH}.tar.gz" | sudo tar -C /usr/local -xzf -
+    # shellcheck disable=SC2016
     echo 'export PATH=$PATH:/usr/local/go/bin' >> "${HOME}/.bashrc"
     export PATH=$PATH:/usr/local/go/bin
 fi

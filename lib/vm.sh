@@ -24,7 +24,7 @@ vm_next_unique_int() {
     while IFS= read -r name; do
         [[ -z "$name" ]] && continue
         if [[ "$name" == ${prefix}* ]]; then
-            local num="${name##${prefix}}"
+            local num="${name##"${prefix}"}"
             if [[ "$num" =~ ^[0-9]+$ ]] && (( num > max )); then
                 max=$num
             fi

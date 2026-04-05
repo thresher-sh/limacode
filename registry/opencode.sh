@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 AGENT_NAME="opencode"
 AGENT_DESCRIPTION="Go-based terminal AI coding agent by terminal.shop"
 AGENT_DEPS=""
