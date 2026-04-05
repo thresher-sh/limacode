@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+      - name: Lint all shell scripts
+        run: |
+          shellcheck limacode.sh
+          shellcheck lib/*.sh
+          shellcheck registry/*.sh
+          shellcheck scripts/provision.sh
+          shellcheck -s sh scripts/install.sh
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install BATS
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew install bats-core
+          else
+            sudo apt-get install -y bats
+          fi
+      - name: Run unit tests
+        run: bats tests/
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package tarball
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          mkdir -p dist/limacode
+          cp limacode.sh dist/limacode/
+          cp -r lib dist/limacode/
+          cp -r registry dist/limacode/
+          cp -r scripts dist/limacode/
+          cd dist
+          for platform in darwin-arm64 darwin-amd64 linux-amd64 linux-arm64; do
+            TARBALL="limacode-v${VERSION}-${platform}.tar.gz"
+            tar -czf "$TARBALL" limacode/
+            sha256sum "$TARBALL" > "${TARBALL}.sha256"
+          done
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/limacode-v*
+          generate_release_notes: true
