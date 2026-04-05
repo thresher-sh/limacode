@@ -1,48 +1,99 @@
 # limacode
-Claude Code, Codex, PI, Open Code - In a sandbox in one command.
 
+Run AI coding agents in sandboxed Lima VMs with one command.
 
-Shell based app that wraps lima vm cli for fast startup of claude code and similar agents within a true VM. This allows them to have full capabilities like using docker etc, while having true kernel level isolation from the host machine.
+Limacode wraps [Lima VM](https://lima-vm.io) to give Claude Code, OpenCode, Pi.dev, and other terminal-based AI agents a real Linux virtual machine with full capabilities (docker, package managers, system tools) while keeping true kernel-level isolation from your host.
 
-By default limacode mounts the current directory at `~/workspace/current` within the vm and starts your desired agent from that directory.
+```bash
+# Run Claude Code against your current project, sandboxed
+limacode
 
-Some additional options supported at this time, others to be added as folks request, are as follows:
+# Run OpenCode instead
+limacode --agent opencode
 
-- add additional directors to the vm under workspace with the following format `--adir <name>:<path>` ... `--adir github:~/github` would mount this as `~/workspace/github` in the vm. This allows you to bring additional code bases etc into the env. Note `current` name cannot be used as it is reserved for active command. You can do a comma separated list of names:path tuples to add multiple directories.
-- you can change the agent to one of the supported agents by using `--agent <name>` for example `--agent codex`.
-- you can restrict the internet access to a specific set of IP's or dns by adding `--restrict-dns <comma separated list>` for example `--restrict-dns api.github.com,registry.npm.com,127.0.0.1`
-- you can build your own image vs using the hosted one by running `limacode build` and you can pass your own base image and provision script with the correct params `limacode build --image <name> --provision-script <path-to-provision-shell-script>`.
-
-We will build and host images on our github releases for your quick use, as provisioning can take 5-10 minutes to build. If you just run `limacode build` it will use the built in `provision.sh` shipped with limacode.
-
-
-> You can also access the shell environment of your running limacode anytime by doing `limacode shell` and if you have an active instance it will open it via shell. You can have multiple limacode sessions running, so if you run limacode shell when running multiple instances it will list your sessions to pick from.
-
-## Global config
-
-All of the options above such as additional directories and dns and agent choice can be configure globally for reuse and reduce param fatique.
-
-```
-limacode config agent <name>
-limacode config restrict-dns <list>
-limacode config adir <list>
-limacode config provision-script <path>
-limacode config image <name>
+# Forward your API key and mount extra directories
+limacode --env ANTHROPIC_API_KEY=sk-ant-xxx --adir libs:~/shared-libs
 ```
 
-## Alias
+Your `$PWD` is mounted at `~/workspace/current` inside the VM. When the session ends, the VM is destroyed. Your code stays on the host.
 
-Setup multiple alias if you want to use it with multiple agents quickly.
+## Install
 
-For example in your `.zshrc` file you could put:
-
-```sh
-alias cc=limacode --agent claudecode --adir "~/github"
-alias codex=limacode --agent codex
-alias claw=limacode --agent openclaw --adir "~/claw"
+```bash
+curl -fsSL https://limacode.dev/install | sh
 ```
 
+The installer checks prerequisites (Lima, jq), offers to install them, verifies SHA-256 checksums, and lets you choose whether to download the pre-built image now, later, or build it locally.
 
-## Supports
+See [docs/quickstart.md](docs/quickstart.md) for detailed setup instructions.
 
-mac and linux
+## Supported Agents
+
+| Agent | Flag | Description |
+|-------|------|-------------|
+| [Claude Code](https://claude.ai) | `--agent claude-code` (default) | Anthropic's terminal coding agent |
+| [OpenCode](https://opencode.ai) | `--agent opencode` | Go-based agent by terminal.shop |
+| [Pi.dev](https://github.com/nicholasgasior/pi-coding-agent) | `--agent pi` | Minimal, extensible agent by Mario Zechner |
+
+More agents can be added via the [registry system](docs/registry.md).
+
+## Commands
+
+```
+limacode [options]              Run agent against current directory (default)
+limacode shell                  Attach to a running instance
+limacode list                   Show running instances
+limacode stop [id]              Stop and remove an instance
+limacode build                  Build the base VM image locally
+limacode update                 Rebuild base image with latest agents
+limacode config <key> [value]   Get/set configuration
+limacode version                Print version
+limacode help                   Show help
+```
+
+## Options
+
+```
+--agent <name>              Agent to run (default: claude-code)
+--adir <name>:<path>[,...]  Mount additional directories at ~/workspace/<name>
+--restrict-dns <list>       Comma-separated domain allowlist
+--env <KEY>=<VALUE>[,...]   Forward environment variables into the VM
+--provision-script <path>   Custom provision script (for build)
+--image <name>              Custom base image (for build)
+```
+
+All options can be persisted with `limacode config`:
+
+```bash
+limacode config agent opencode
+limacode config env ANTHROPIC_API_KEY=sk-ant-xxx
+limacode config adir github:~/github,data:/tmp/data
+```
+
+## How It Works
+
+1. Limacode generates a Lima YAML config for your session
+2. Creates an ephemeral VM with your project directory mounted
+3. Starts the chosen agent inside the VM
+4. When you exit, the VM is stopped and deleted
+
+The agent runs in a full Linux VM with its own kernel, filesystem, and network stack. It can install packages, run docker, use system tools -- but it cannot touch anything on your host outside the mounted directories.
+
+See [docs/architecture.md](docs/architecture.md) for the full technical breakdown.
+
+## Documentation
+
+- [Quick Start Guide](docs/quickstart.md) -- get running in 5 minutes
+- [Architecture](docs/architecture.md) -- how limacode works under the hood
+- [VM Lifecycle](docs/vm-lifecycle.md) -- instance naming, sessions, cleanup
+- [Registry & Contributing Agents](docs/registry.md) -- add your own agents
+- [CI/CD](docs/cicd.md) -- how the project is tested and released
+- [Security](docs/SECURITY.md) -- what the sandbox protects and what it doesn't
+
+## Platforms
+
+macOS (VZ backend, virtiofs mounts) and Linux (QEMU backend, 9p mounts).
+
+## License
+
+MIT
