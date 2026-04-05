@@ -1,0 +1,6 @@
+agent=opencode
+adir=github:~/github,data:/tmp/data
+restrict-dns=
+env=ANTHROPIC_API_KEY=sk-test
+provision-script=
+image=

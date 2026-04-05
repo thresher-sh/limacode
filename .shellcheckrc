@@ -1,0 +1,5 @@
+# Allow sourcing from dynamic paths
+disable=SC1090
+disable=SC1091
+# Allow unused variables in registry files (AGENT_DEPS is optional)
+disable=SC2034
