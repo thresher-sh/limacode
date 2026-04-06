@@ -1,11 +1,11 @@
 #!/bin/sh
 # Limacode installer — POSIX sh for portability
-# Usage: curl -fsSL https://limacode.dev/install | sh
+# Usage: curl -fsSL https://code.thresher.sh/install | sh
 # Non-interactive: curl ... | sh -s -- --yes --image=download-now
 set -eu
 
 LIMACODE_VERSION="${LIMACODE_VERSION:-0.1.0}"
-LIMACODE_REPO="limacode/limacode"
+LIMACODE_REPO="thresher-sh/limacode"
 LIMACODE_INSTALL_DIR="${HOME}/.limacode/bin"
 LIMACODE_CONFIG_DIR="${HOME}/.limacode"
 

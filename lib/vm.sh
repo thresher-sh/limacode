@@ -67,7 +67,7 @@ vm_start() {
 vm_shell() {
     local instance_name="$1"
     shift
-    limactl shell "$instance_name" -- "$@"
+    limactl shell --workdir "/home/${USER}/workspace/current" "$instance_name" -- "$@"
 }
 
 vm_shell_with_env() {
@@ -81,8 +81,15 @@ vm_shell_with_env() {
                 export "${entry?}"
             done
         fi
-        limactl shell --preserve-env "$instance_name" -- "$@"
+        limactl shell --preserve-env --workdir "/home/${USER}/workspace/current" "$instance_name" -- "$@"
     )
+}
+
+vm_provision_agent() {
+    local instance_name="$1"
+    local install_fn
+    install_fn="$(declare -f agent_install)"
+    limactl shell "$instance_name" -- bash -c "${install_fn}; agent_install"
 }
 
 vm_stop() {

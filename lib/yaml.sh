@@ -80,8 +80,27 @@ yaml_generate() {
         done
     fi
 
+    local host_arch
+    host_arch="$(uname -m)"
+
+    local lima_arch img_arch
+    case "$host_arch" in
+        aarch64|arm64)
+            lima_arch="aarch64"
+            img_arch="arm64"
+            ;;
+        x86_64|amd64)
+            lima_arch="x86_64"
+            img_arch="amd64"
+            ;;
+        *)
+            echo "ERROR: Unsupported architecture: ${host_arch}" >&2
+            return 1
+            ;;
+    esac
+
     if [[ -z "$image_location" ]]; then
-        image_location="https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img"
+        image_location="https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-${img_arch}.img"
     fi
 
     cat <<YAML
@@ -93,7 +112,7 @@ disk: "50GiB"
 
 images:
 - location: "${image_location}"
-  arch: "x86_64"
+  arch: "${lima_arch}"
 
 mountType: "${mount_type}"
 

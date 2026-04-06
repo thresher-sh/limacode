@@ -74,6 +74,18 @@ cmd_run() {
     agent_file="$(registry_find "$LIMACODE_AGENT" "${LIMACODE_ROOT}/registry")" || exit 1
     registry_load "$agent_file" || exit 1
 
+    local needs_provision=true
+
+    # If no explicit --image, try to use a pre-built limacode image
+    if [[ -z "$LIMACODE_IMAGE" ]]; then
+        local resolved_image
+        resolved_image="$(image_resolve)" || true
+        if [[ -n "$resolved_image" ]]; then
+            LIMACODE_IMAGE="$resolved_image"
+            needs_provision=false
+        fi
+    fi
+
     local yaml_file
     yaml_file="$(mktemp /tmp/limacode-XXXXXX.yaml)"
     yaml_generate "$project_dir" "$LIMACODE_IMAGE" "$LIMACODE_ADIR" "$LIMACODE_RESTRICT_DNS" > "$yaml_file"
@@ -89,6 +101,11 @@ cmd_run() {
     rm -f "$yaml_file"
 
     vm_start "$instance_name" || exit 1
+
+    if [[ "$needs_provision" == true ]]; then
+        log "Provisioning agent: ${AGENT_NAME}..."
+        vm_provision_agent "$instance_name" || exit 1
+    fi
 
     log "Starting ${AGENT_DESCRIPTION} in sandbox..."
     local -a cmd_parts

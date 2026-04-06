@@ -73,6 +73,27 @@ teardown() {
     [[ "$result" != *"iptables"* ]]
 }
 
+@test "yaml_generate uses correct arch for host platform" {
+    result="$(yaml_generate /tmp/testproject)"
+    local host_arch
+    host_arch="$(uname -m)"
+    case "$host_arch" in
+        aarch64|arm64)
+            [[ "$result" == *'arch: "aarch64"'* ]]
+            [[ "$result" == *"arm64.img"* ]]
+            ;;
+        x86_64|amd64)
+            [[ "$result" == *'arch: "x86_64"'* ]]
+            [[ "$result" == *"amd64.img"* ]]
+            ;;
+    esac
+}
+
+@test "yaml_generate uses custom image without modifying arch in URL" {
+    result="$(yaml_generate /tmp/testproject "file:///custom/image.qcow2")"
+    [[ "$result" == *"file:///custom/image.qcow2"* ]]
+}
+
 @test "yaml_generate does not include env block" {
     result="$(yaml_generate /tmp/testproject)"
     [[ "$result" != *"env:"* ]]

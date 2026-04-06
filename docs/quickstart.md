@@ -12,7 +12,7 @@ The installer handles everything else (Lima, jq, QEMU on Linux).
 ## Install
 
 ```bash
-curl -fsSL https://limacode.dev/install | sh
+curl -fsSL https://code.thresher.sh/install | sh
 ```
 
 The installer will:
@@ -30,7 +30,7 @@ source ~/.zshrc    # or ~/.bashrc
 ### Non-interactive install (CI/automation)
 
 ```bash
-curl -fsSL https://limacode.dev/install | sh -s -- --yes --image=download-now
+curl -fsSL https://code.thresher.sh/install | sh -s -- --yes --image=download-now
 ```
 
 ### Homebrew (macOS)

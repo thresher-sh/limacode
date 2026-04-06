@@ -113,7 +113,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-The CI pipeline handles the rest. The release appears at `https://github.com/limacode/limacode/releases/tag/v0.1.0`.
+The CI pipeline handles the rest. The release appears at `https://github.com/thresher-sh/limacode/releases/tag/v0.1.0`.
 
 ### Base VM image
 

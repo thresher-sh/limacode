@@ -90,6 +90,29 @@ See [docs/architecture.md](docs/architecture.md) for the full technical breakdow
 - [CI/CD](docs/cicd.md) -- how the project is tested and released
 - [Security](docs/SECURITY.md) -- what the sandbox protects and what it doesn't
 
+## Development
+
+To run limacode from a local clone of the repo:
+
+```bash
+git clone https://github.com/thresher-sh/limacode.git
+cd limacode
+./limacode.sh help
+```
+
+You can run any command directly:
+
+```bash
+./limacode.sh version
+./limacode.sh --agent claude-code --env ANTHROPIC_API_KEY=sk-ant-xxx
+```
+
+To run the test suite (requires [BATS](https://github.com/bats-core/bats-core)):
+
+```bash
+bats tests/
+```
+
 ## Platforms
 
 macOS (VZ backend, virtiofs mounts) and Linux (QEMU backend, 9p mounts).

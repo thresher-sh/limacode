@@ -44,3 +44,45 @@ teardown() {
     [ "$result" = "1" ]
     unset -f limactl
 }
+
+@test "vm_shell passes --workdir to limactl" {
+    local captured_args=""
+    limactl() { captured_args="$*"; }
+    export -f limactl
+    vm_shell "test-instance" echo hello
+    [[ "$captured_args" == *"--workdir"* ]]
+    [[ "$captured_args" == *"/workspace/current"* ]]
+    unset -f limactl
+}
+
+@test "vm_shell_with_env passes --workdir to limactl" {
+    local captured_args=""
+    limactl() { captured_args="$*"; }
+    export -f limactl
+    vm_shell_with_env "test-instance" "" echo hello
+    [[ "$captured_args" == *"--workdir"* ]]
+    [[ "$captured_args" == *"/workspace/current"* ]]
+    unset -f limactl
+}
+
+@test "vm_shell_with_env exports env vars" {
+    limactl() { echo "$TEST_LIMACODE_VAR"; }
+    export -f limactl
+    result="$(vm_shell_with_env "test-instance" "TEST_LIMACODE_VAR=hello123" echo)"
+    unset -f limactl
+    # The var is exported inside the subshell; limactl stub echoes it
+    [[ "$result" == *"hello123"* ]]
+}
+
+@test "vm_provision_agent runs agent_install via limactl shell" {
+    local captured_args=""
+    limactl() { captured_args="$*"; }
+    export -f limactl
+    agent_install() { echo "installing agent"; }
+    export -f agent_install
+    vm_provision_agent "test-instance"
+    [[ "$captured_args" == *"test-instance"* ]]
+    [[ "$captured_args" == *"agent_install"* ]]
+    unset -f limactl
+    unset -f agent_install
+}
