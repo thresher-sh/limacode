@@ -24,7 +24,7 @@ shellcheck limacode.sh
 shellcheck lib/*.sh
 shellcheck registry/*.sh
 shellcheck scripts/provision.sh
-shellcheck -s sh scripts/install.sh    # POSIX mode for the installer
+shellcheck -s sh docs/install    # POSIX mode for the installer
 ```
 
 The project includes a `.shellcheckrc` that disables:
@@ -35,7 +35,7 @@ The project includes a `.shellcheckrc` that disables:
 
 ```bash
 shellcheck limacode.sh lib/*.sh registry/*.sh scripts/provision.sh
-shellcheck -s sh scripts/install.sh
+shellcheck -s sh docs/install
 ```
 
 ## Test Job

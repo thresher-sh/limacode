@@ -25,7 +25,7 @@ lib/vm.sh            — VM lifecycle (create/start/stop/delete/shell)
 lib/network.sh       — iptables script generation for --restrict-dns
 lib/image.sh         — Base image build/export/checksum
 registry/*.sh        — Agent definitions (claude-code, opencode, pi)
-scripts/install.sh   — POSIX interactive installer (curl | sh)
+docs/install         — POSIX interactive installer (curl | sh)
 scripts/provision.sh — Idempotent VM provisioning (runs inside VM)
 ```
 
@@ -49,7 +49,7 @@ No Lima installation required for tests — VM functions are mocked.
 
 ```bash
 shellcheck limacode.sh lib/*.sh registry/*.sh scripts/provision.sh
-shellcheck -s sh scripts/install.sh   # POSIX mode for installer
+shellcheck -s sh docs/install   # POSIX mode for installer
 ```
 
 ShellCheck config in `.shellcheckrc` disables SC1090, SC1091, SC2034.

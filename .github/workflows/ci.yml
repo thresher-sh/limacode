@@ -19,7 +19,7 @@ jobs:
           shellcheck lib/*.sh
           shellcheck registry/*.sh
           shellcheck scripts/provision.sh
-          shellcheck -s sh scripts/install.sh
+          shellcheck -s sh docs/install
 
   test:
     runs-on: ${{ matrix.os }}

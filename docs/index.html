@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>limacode — Sandboxed AI Coding Agents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep-black: #0a0a0a;
+    --terminal-black: #1a1a1a;
+    --charcoal: #2a2a2a;
+    --steel: #6b7280;
+    --bone: #e5e5e5;
+    --white: #fafafa;
+    --arctic: #f0f9ff;
+    --violet: #a78bfa;
+    --violet-dim: rgba(167, 139, 250, 0.15);
+    --violet-glow: rgba(167, 139, 250, 0.08);
+    --safe-green: #22c55e;
+    --amber: #f59e0b;
+    --threat-red: #ef4444;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --sans: 'Inter', -apple-system, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--deep-black);
+    color: var(--bone);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── Nav ─────────────────────────────────────── */
+  nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    background: rgba(10, 10, 10, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--charcoal);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-brand {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--arctic);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-brand:hover { color: var(--violet); }
+
+  .prompt-mark {
+    color: var(--steel);
+    font-weight: 700;
+    margin-right: 2px;
+    transition: color 0.2s;
+  }
+
+  .vm-mark { color: var(--violet); }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--steel);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.15s;
+  }
+
+  .nav-links a:hover { color: var(--arctic); }
+
+  /* ── Hero ────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 24px 60px;
+    text-align: center;
+    position: relative;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    height: 400px;
+    background: radial-gradient(ellipse, var(--violet-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero h1 {
+    font-family: var(--mono);
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 700;
+    color: var(--arctic);
+    letter-spacing: -2px;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero .tagline {
+    font-family: var(--mono);
+    font-size: clamp(15px, 2vw, 18px);
+    color: var(--steel);
+    margin-bottom: 48px;
+    max-width: 560px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .install-box {
+    background: var(--terminal-black);
+    border: 1px solid var(--violet);
+    border-radius: 8px;
+    padding: 20px 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: box-shadow 0.3s;
+    position: relative;
+    z-index: 1;
+  }
+
+  .install-box:hover {
+    box-shadow: 0 0 40px var(--violet-glow), 0 0 80px rgba(167, 139, 250, 0.05);
+  }
+
+  .install-box .prompt { color: var(--steel); user-select: none; }
+
+  .install-box .cmd {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--arctic);
+  }
+
+  .install-box .cmd .domain { color: var(--violet); }
+
+  .install-hint {
+    font-size: 11px;
+    color: var(--steel);
+    margin-top: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .copy-tooltip {
+    position: absolute;
+    right: -80px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--violet);
+    color: var(--deep-black);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 5px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s, transform 0.15s;
+    transform: translateY(-50%) translateX(4px);
+  }
+
+  .copy-tooltip::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-right-color: var(--violet);
+    border-left: 0;
+  }
+
+  .copy-tooltip.show {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+
+  .hero-links {
+    margin-top: 40px;
+    color: var(--steel);
+    font-size: 13px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-links a {
+    color: var(--arctic);
+    text-decoration: none;
+    border-bottom: 1px solid var(--charcoal);
+    transition: border-color 0.2s;
+  }
+
+  .hero-links a:hover { border-color: var(--violet); }
+
+  /* ── Terminal ───────────────────────────────── */
+  .terminal {
+    background: var(--terminal-black);
+    border: 1px solid var(--charcoal);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .terminal-bar {
+    background: var(--charcoal);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .terminal-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .terminal-dot:nth-child(1) { background: #ef4444; opacity: 0.7; }
+  .terminal-dot:nth-child(2) { background: #f59e0b; opacity: 0.7; }
+  .terminal-dot:nth-child(3) { background: #22c55e; opacity: 0.7; }
+
+  .terminal-title {
+    font-size: 12px;
+    color: var(--steel);
+    margin-left: 8px;
+  }
+
+  .terminal-body {
+    padding: 24px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-x: auto;
+    color: var(--bone);
+  }
+
+  .t-v { color: var(--violet); }
+  .t-a { color: var(--arctic); }
+  .t-g { color: var(--safe-green); }
+  .t-am { color: var(--amber); }
+  .t-s { color: var(--steel); }
+  .t-w { color: var(--white); font-weight: 700; }
+  .t-r { color: var(--threat-red); }
+
+  /* ── Sections ──────────────────────────────── */
+  .section {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 100px 24px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--violet);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+  }
+
+  .section h2 {
+    font-family: var(--mono);
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 700;
+    color: var(--arctic);
+    letter-spacing: -1px;
+    margin-bottom: 40px;
+  }
+
+  /* ── Boundary diagram ─────────────────────── */
+  .boundary {
+    display: grid;
+    grid-template-columns: 1fr 60px 1fr;
+    gap: 0;
+    align-items: stretch;
+    margin-bottom: 32px;
+  }
+
+  .boundary-side {
+    background: var(--terminal-black);
+    border: 1px solid var(--charcoal);
+    border-radius: 8px;
+    padding: 28px 24px;
+  }
+
+  .boundary-side h3 {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+
+  .boundary-side ul {
+    list-style: none;
+    font-size: 13px;
+    line-height: 2;
+  }
+
+  .boundary-divider {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--violet);
+    font-size: 18px;
+    gap: 4px;
+  }
+
+  .boundary-divider span {
+    writing-mode: vertical-lr;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--steel);
+  }
+
+  /* ── Agent strip ───────────────────────────── */
+  .agent-strip {
+    display: flex;
+    gap: 1px;
+    background: var(--charcoal);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .agent-item {
+    flex: 1;
+    background: var(--terminal-black);
+    padding: 24px 20px;
+    transition: background 0.2s;
+  }
+
+  .agent-item:hover { background: var(--charcoal); }
+
+  .agent-item .flag {
+    font-size: 10px;
+    color: var(--violet);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .agent-item .name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--arctic);
+    margin-bottom: 4px;
+  }
+
+  .agent-item .name a {
+    color: var(--arctic);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .agent-item .name a:hover { color: var(--violet); }
+
+  .agent-item .desc {
+    font-size: 12px;
+    color: var(--steel);
+    line-height: 1.5;
+  }
+
+  /* ── Reference table ───────────────────────── */
+  .ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .ref-table tr {
+    border-bottom: 1px solid var(--charcoal);
+  }
+
+  .ref-table tr:last-child { border-bottom: none; }
+
+  .ref-table td {
+    padding: 12px 0;
+    vertical-align: top;
+  }
+
+  .ref-table td:first-child {
+    color: var(--arctic);
+    font-weight: 500;
+    white-space: nowrap;
+    padding-right: 32px;
+    width: 280px;
+  }
+
+  .ref-table td:last-child {
+    color: var(--steel);
+  }
+
+  /* ── Footer ────────────────────────────────── */
+  .footer-shark {
+    font-family: var(--mono);
+    color: var(--violet);
+    opacity: 0.6;
+    font-size: 12px;
+    margin-bottom: 16px;
+    white-space: pre;
+    overflow: hidden;
+  }
+
+  footer {
+    border-top: 1px solid var(--charcoal);
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--steel);
+    font-size: 12px;
+  }
+
+  footer a {
+    color: var(--arctic);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  footer a:hover { color: var(--violet); }
+
+  /* ── Responsive ────────────────────────────── */
+  @media (max-width: 768px) {
+    .boundary { grid-template-columns: 1fr; gap: 12px; }
+    .boundary-divider {
+      flex-direction: row;
+      padding: 8px 0;
+    }
+    .boundary-divider span { writing-mode: horizontal-tb; }
+    .agent-strip { flex-direction: column; }
+    .nav-links { display: none; }
+    .install-box { padding: 16px 20px; }
+    .install-box .cmd { font-size: 14px; }
+    .ref-table td:first-child { white-space: normal; width: auto; }
+    .copy-tooltip {
+      right: auto;
+      left: 50%;
+      top: -36px;
+      transform: translateX(-50%);
+    }
+    .copy-tooltip::before {
+      left: 50%;
+      top: auto;
+      bottom: -5px;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: var(--violet);
+      border-bottom: 0;
+    }
+    .copy-tooltip.show {
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────── -->
+<nav>
+  <a href="#" class="nav-brand"><span class="prompt-mark">$</span> <span class="vm-mark">limacode</span></a>
+  <ul class="nav-links">
+    <li><a href="https://github.com/thresher-sh/limacode">GitHub</a></li>
+    <li><a href="https://github.com/thresher-sh/limacode/tree/main/docs">Docs</a></li>
+    <li><a href="https://thresher.sh">thresher.sh</a></li>
+  </ul>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────── -->
+<section class="hero">
+  <h1><span class="prompt-mark">$</span> limacode</h1>
+  <p class="tagline">Sandbox AI coding agents in ephemeral Lima VMs. Full Linux capabilities, kernel-level isolation, destroyed on exit.</p>
+
+  <div class="install-box" onclick="copyCmd(this)">
+    <span class="prompt">$</span>
+    <span class="cmd">curl -fsSL https://<span class="domain">code.thresher.sh</span>/install | sh</span>
+    <span class="copy-tooltip">copied!</span>
+  </div>
+  <div class="install-hint">click to copy</div>
+
+  <p class="hero-links">
+    <a href="https://github.com/thresher-sh/limacode">GitHub</a>
+    &middot; MIT License
+    &middot; Part of <a href="https://thresher.sh">thresher.sh</a>
+  </p>
+</section>
+
+<!-- ── Demo ─────────────────────────────────────────────── -->
+<section class="section">
+  <div class="terminal" style="max-width: 780px; margin: 0 auto;">
+    <div class="terminal-bar">
+      <div class="terminal-dot"></div>
+      <div class="terminal-dot"></div>
+      <div class="terminal-dot"></div>
+      <span class="terminal-title">~/my-project</span>
+    </div>
+    <div class="terminal-body"><span class="t-s">$</span> limacode
+<span class="t-s">Using pre-built image:</span> <span class="t-a">~/.limacode/images/limacode-base-arm64.qcow2</span>
+<span class="t-s">Creating VM:</span> <span class="t-a">limacode-claude-code-a1b2c3-1</span>
+<span class="t-g">[OK]</span> VM started
+Starting Anthropic's Claude Code terminal agent in sandbox...
+
+<span class="t-v">╭──────────────────────────────────────────────────────╮</span>
+<span class="t-v">│</span>                                                      <span class="t-v">│</span>
+<span class="t-v">│</span>  <span class="t-w">Claude Code</span>                                        <span class="t-v">│</span>
+<span class="t-v">│</span>  <span class="t-s">~/workspace/current  (limacode-...-1)</span>              <span class="t-v">│</span>
+<span class="t-v">│</span>                                                      <span class="t-v">│</span>
+<span class="t-v">╰──────────────────────────────────────────────────────╯</span>
+
+<span class="t-a">&gt;</span> I can see 12 source files and 3 test suites.
+<span class="t-a">&gt;</span> Installing dev dependencies... <span class="t-g">done</span>
+<span class="t-a">&gt;</span> Running tests... <span class="t-g">45 passed</span>
+<span class="t-a">&gt;</span> <span class="t-s">ctrl-c to exit</span>
+
+<span class="t-s">$</span> <span class="t-am">^C</span>
+<span class="t-s">Stopping VM:</span> limacode-claude-code-a1b2c3-1
+<span class="t-g">[OK]</span> VM destroyed</div>
+  </div>
+</section>
+
+<!-- ── Isolation boundary ──────────────────────────────── -->
+<section class="section">
+  <div class="section-label">// Isolation boundary</div>
+  <h2>The agent gets everything. Your host gives up nothing.</h2>
+
+  <div class="boundary">
+    <div class="boundary-side">
+      <h3 style="color: var(--safe-green);">INSIDE THE VM</h3>
+      <ul>
+        <li><span class="t-g">+</span> Full root access</li>
+        <li><span class="t-g">+</span> apt-get, npm, pip, cargo</li>
+        <li><span class="t-g">+</span> Docker &amp; containers</li>
+        <li><span class="t-g">+</span> System tools &amp; daemons</li>
+        <li><span class="t-g">+</span> Own kernel &amp; network stack</li>
+        <li><span class="t-g">+</span> Your project at ~/workspace/current</li>
+      </ul>
+    </div>
+    <div class="boundary-divider">
+      <span>VM WALL</span>
+    </div>
+    <div class="boundary-side">
+      <h3 style="color: var(--threat-red);">BLOCKED FROM HOST</h3>
+      <ul>
+        <li><span class="t-r">&times;</span> Host filesystem (except mounted dirs)</li>
+        <li><span class="t-r">&times;</span> Host processes &amp; PIDs</li>
+        <li><span class="t-r">&times;</span> SSH keys &amp; credentials</li>
+        <li><span class="t-r">&times;</span> Other VMs &amp; containers</li>
+        <li><span class="t-r">&times;</span> Unrestricted network <span class="t-s">(optional)</span></li>
+        <li><span class="t-r">&times;</span> Persistence after exit</li>
+      </ul>
+    </div>
+  </div>
+
+  <p style="text-align: center; color: var(--steel); font-size: 13px; font-family: var(--sans);">
+    Not a container. A real VM &mdash; Apple Virtualization on macOS, QEMU on Linux.
+  </p>
+</section>
+
+<!-- ── Agents ──────────────────────────────────────────── -->
+<section class="section">
+  <div class="section-label">// Agents</div>
+  <h2>Pick one. Or add your own.</h2>
+
+  <div class="agent-strip">
+    <div class="agent-item">
+      <div class="flag">DEFAULT</div>
+      <div class="name"><a href="https://claude.ai">Claude Code</a></div>
+      <div class="desc">Anthropic's terminal agent</div>
+    </div>
+    <div class="agent-item">
+      <div class="flag">--agent opencode</div>
+      <div class="name"><a href="https://opencode.ai">OpenCode</a></div>
+      <div class="desc">Go-based, multi-provider</div>
+    </div>
+    <div class="agent-item">
+      <div class="flag">--agent pi</div>
+      <div class="name"><a href="https://github.com/nicholasgasior/pi-coding-agent">Pi.dev</a></div>
+      <div class="desc">Minimal, Node.js-based</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 20px; padding: 16px 20px; background: var(--terminal-black); border: 1px solid var(--charcoal); border-radius: 8px; font-size: 13px; color: var(--steel);">
+    Agents are shell scripts in <a href="https://github.com/thresher-sh/limacode/tree/main/registry" style="color: var(--arctic); text-decoration: none;">registry/</a>. Export a name, an install function, and a run command. That's it.
+  </div>
+</section>
+
+<!-- ── Reference ──────────────────────────────────────── -->
+<section class="section">
+  <div class="section-label">// Reference</div>
+  <h2>Commands &amp; options.</h2>
+
+  <div style="background: var(--terminal-black); border: 1px solid var(--charcoal); border-radius: 8px; padding: 28px 32px; margin-bottom: 40px;">
+    <table class="ref-table">
+      <tr>
+        <td>limacode</td>
+        <td>Run default agent against current directory</td>
+      </tr>
+      <tr>
+        <td>limacode --agent opencode</td>
+        <td>Run a different agent</td>
+      </tr>
+      <tr>
+        <td>limacode --env KEY=val</td>
+        <td>Forward environment variables into the VM</td>
+      </tr>
+      <tr>
+        <td>limacode --adir name:~/path</td>
+        <td>Mount additional directories</td>
+      </tr>
+      <tr>
+        <td>limacode --restrict-dns domains</td>
+        <td>Lock network to specific domains only</td>
+      </tr>
+      <tr>
+        <td>limacode list</td>
+        <td>Show running instances</td>
+      </tr>
+      <tr>
+        <td>limacode stop [id]</td>
+        <td>Stop and remove an instance</td>
+      </tr>
+      <tr>
+        <td>limacode shell</td>
+        <td>Attach to a running VM</td>
+      </tr>
+      <tr>
+        <td>limacode build</td>
+        <td>Build the base image locally</td>
+      </tr>
+      <tr>
+        <td>limacode config key [value]</td>
+        <td>Get/set persistent defaults</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="terminal" style="max-width: 600px;">
+    <div class="terminal-bar">
+      <div class="terminal-dot"></div>
+      <div class="terminal-dot"></div>
+      <div class="terminal-dot"></div>
+      <span class="terminal-title">config examples</span>
+    </div>
+    <div class="terminal-body"><span class="t-s"># Set defaults so you don't have to type them every time</span>
+<span class="t-s">$</span> limacode config agent <span class="t-v">opencode</span>
+<span class="t-s">$</span> limacode config env <span class="t-v">ANTHROPIC_API_KEY=sk-ant-...</span>
+<span class="t-s">$</span> limacode config adir <span class="t-v">shared:~/libs,data:/tmp/data</span>
+
+<span class="t-s"># Then just run</span>
+<span class="t-s">$</span> limacode</div>
+  </div>
+</section>
+
+<!-- ── Footer ──────────────────────────────────────────── -->
+<footer>
+  <div class="footer-shark" id="swim-line"></div>
+  <p>
+    <a href="https://github.com/thresher-sh/limacode">GitHub</a> &middot;
+    <a href="https://thresher.sh">thresher.sh</a> &middot;
+    <a href="https://github.com/thresher-sh/limacode/tree/main/docs">Docs</a> &middot;
+    MIT License
+  </p>
+  <p style="max-width: 600px; margin: 16px auto 0; color: var(--steel); font-size: 11px; line-height: 1.6;">
+    <strong>limacode</strong> is part of <a href="https://thresher.sh">thresher.sh</a>.
+    Built on <a href="https://lima-vm.io">Lima VM</a>. macOS (VZ + virtiofs) and Linux (QEMU + 9p).
+  </p>
+</footer>
+
+<script>
+function copyCmd(el) {
+  navigator.clipboard.writeText('curl -fsSL https://code.thresher.sh/install | sh').then(function() {
+    var tip = el.querySelector('.copy-tooltip');
+    if (!tip) return;
+    tip.classList.add('show');
+    setTimeout(function() { tip.classList.remove('show'); }, 1500);
+  });
+}
+</script>
+<script>
+(function() {
+  var el = document.getElementById('swim-line');
+  if (!el) return;
+  var fin = '_/|', finBack = '|\\_', water = '~', width = 60;
+  var pos = 0, dir = 1;
+  function frame() {
+    var left = water.repeat(pos);
+    var right = water.repeat(width - pos - 3);
+    el.textContent = left + (dir === 1 ? fin : finBack) + right;
+    pos += dir;
+    if (pos >= width - 3) dir = -1;
+    if (pos <= 0) dir = 1;
+  }
+  setInterval(frame, 80);
+})();
+</script>
+
+</body>
+</html>
